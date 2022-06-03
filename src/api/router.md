@@ -1,5 +1,4 @@
 ## ROUTER ##
- 	/api/v1/scpf/comment
- 	/api/v1/scpf/auth
- 	/api/v1/scpf/test
- 	/api/v1/scpf/post
+ 	/api/v1/bankingAPI/account
+ 	/api/v1/bankingAPI/test
+ 	/api/v1/bankingAPI/transaction

@@ -22,9 +22,9 @@ exports.validate_token = () => {
                     err('token not found', req.originalUrl)
                     failed(res, 'token not found')
                 } else {
-                    debug('access user_id', decode.user_id)
+                    debug('access account_id', decode.account_id)
                     req.token = req.headers.authorization
-                    req.user_id = decode.user_id
+                    req.account_id = decode.account_id
                     next()
                 }
             })

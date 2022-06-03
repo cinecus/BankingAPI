@@ -2,33 +2,31 @@ const Joi = require('joi')
 const mongoose = require('mongoose')
 const moment = require('moment')
 
-const authSchema = mongoose.Schema({
+const accountSchema = mongoose.Schema({
     authen_id: String,  //for third party OAuth
     first_name: String,
     last_name: String,
     username: String,
     password: String,
-    email: String,
-    posts: [
+    transactions: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'post'
+            ref: 'transaction'
         }
     ],
-    comments: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'comment'
-        }
-    ],
-    createdAt: {
+    created_date: {
         type: Date,
         required: true,
         default: () => Date.now()
-    }
-}, { collection: 'user' })
+    },
+    updated_date: {
+        type: Date,
+        required: true,
+        default: () => Date.now()
+    },
+}, { collection: 'account' })
 
-exports.AuthSchema = mongoose.model('user', authSchema)
+exports.accountSchema = mongoose.model('account', accountSchema)
 
 exports.sch_register = Joi.object().keys({
     username: Joi.string().required(),

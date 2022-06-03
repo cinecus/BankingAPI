@@ -2,7 +2,7 @@ require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const dayjs = require('dayjs')
 const jsonwebtoken = require('jsonwebtoken')
-const authModel = require('../api/auth/authModel')
+const accountModel = require('../api/account/accountModel')
 
 exports.getOriginPath = (originalUrl) => {
     let replace = originalUrl.replace(`/api/v1/${process.env.PREFIX}`, '')
@@ -30,8 +30,8 @@ exports.decrypted = async (hashpassword, password) => {
     return bcrypt.compareSync(password, hashpassword)
 }
 
-exports.generateToken = (req, user_id) => {
-    let objToken = { user_id }
+exports.generateToken = (req, account_id) => {
+    let objToken = { account_id }
     req.token = jsonwebtoken.sign(objToken, process.env.SIGN, { expiresIn: '120d' })
     req.token_date = dayjs().format('YYYY-MM-DD HH:mm:ss')
     return
