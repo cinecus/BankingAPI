@@ -9,7 +9,11 @@ class accountModel {
             const account = await accountSchema.findOne(obj)
                 .populate({
                     path: 'transactions',
-                    populate: { path: "account_id" }
+                    populate: { path: "account_id" },
+                    options: { sort: { created_date: -1 } }
+                })
+                .select({
+                    password: 0
                 })
             return { completed: true, account }
         } catch (error) {

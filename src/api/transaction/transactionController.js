@@ -10,17 +10,17 @@ const { encrypted, decrypted, generateToken } = require('../../functions')
 class transactionController {
     async deposit(req, res) {
         try {
-            const { account_id, amount } = req.body
-            const lastest_transaction = await transactionModel.getLastestTransaction(account_id)
+            const { amount } = req.body
+            const lastest_transaction = await transactionModel.getLastestTransaction(req.account_id)
             const current_amount = (!!lastest_transaction ? lastest_transaction.current_amount : 0) + amount
             const transaction = await transactionModel.insertTransaction({
                 type: 'deposit',
-                account_id,
+                account_id: req.account_id,
                 ref_account_id: null,
                 current_amount,
                 amount
             })
-            const { account } = await accountModel.findOneAccount({ _id: account_id })
+            const { account } = await accountModel.findOneAccount({ _id: req.account_id })
 
             account.transactions.push(transaction._id)
             await account.save()
@@ -34,9 +34,9 @@ class transactionController {
 
     async withdraw(req, res) {
         try {
-            const { account_id, amount } = req.body
+            const { amount } = req.body
 
-            const lastest_transaction = await transactionModel.getLastestTransaction(account_id)
+            const lastest_transaction = await transactionModel.getLastestTransaction(req.account_id)
             if (!lastest_transaction) {
                 return failed(res, 'เงินในบัญชีไม่เพียงพอ')
             }
@@ -46,12 +46,12 @@ class transactionController {
             const current_amount = (!!lastest_transaction ? lastest_transaction.current_amount : 0) - amount
             const transaction = await transactionModel.insertTransaction({
                 type: 'withdraw',
-                account_id,
+                account_id: req.account_id,
                 ref_account_id: null,
                 current_amount,
                 amount
             })
-            const { account } = await accountModel.findOneAccount({ _id: account_id })
+            const { account } = await accountModel.findOneAccount({ _id: req.account_id })
 
             account.transactions.push(transaction._id)
             await account.save()
@@ -65,8 +65,18 @@ class transactionController {
 
     async transfer(req, res) {
         try {
-            const { account_id, ref_account_id, amount } = req.body
-            const lastest_transaction = await transactionModel.getLastestTransaction(account_id)
+            const { ref_account, amount } = req.body
+            const { account } = await accountModel.findOneAccount({ _id: req.account_id })
+            let account_ref
+            if (ref_account.length === 24) {
+                account_ref = (await accountModel.findOneAccount({ _id: ref_account })).account
+            } else {
+                account_ref = (await accountModel.findOneAccount({ username: ref_account })).account
+            }
+            if (ref_account === req.account_id || !account_ref) {
+                return failed(res, 'เลขบัญชีผู้รับไม่ถูกต้อง')
+            }
+            const lastest_transaction = await transactionModel.getLastestTransaction(req.account_id)
             if (!lastest_transaction) {
                 return failed(res, 'เงินในบัญชีไม่เพียงพอ')
             }
@@ -74,28 +84,28 @@ class transactionController {
             if (amount > lastest_transaction.current_amount) {
                 return failed(res, 'เงินในบัญชีไม่เพียงพอ')
             }
-            const lastest_transaction_ref = await transactionModel.getLastestTransaction(ref_account_id)
+            const lastest_transaction_ref = await transactionModel.getLastestTransaction(ref_account)
             const current_amount_ref = (!!lastest_transaction_ref ? lastest_transaction_ref.current_amount : 0) + amount
             const transaction = await transactionModel.insertTransaction({
                 type: 'transfer',
-                account_id: account_id,
-                ref_account_id: ref_account_id,
+                account_id: req.account_id,
+                ref_account_id: ref_account,
                 current_amount: current_amount,
                 amount
             })
             const transaction_ref = await transactionModel.insertTransaction({
                 type: 'receive',
-                account_id: ref_account_id,
-                ref_account_id: account_id,
+                account_id: ref_account,
+                ref_account_id: req.account_id,
                 current_amount: current_amount_ref,
                 amount
             })
 
-            const { account } = await accountModel.findOneAccount({ _id: account_id })
+
             account.transactions.push(transaction._id)
             await account.save()
 
-            const { account: account_ref } = await accountModel.findOneAccount({ _id: ref_account_id })
+
             account_ref.transactions.push(transaction_ref._id)
             await account_ref.save()
 

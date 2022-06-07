@@ -1,4 +1,5 @@
 const accountModel = require('./accountModel')
+const transactionModel = require('../transaction/transactionModel')
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
@@ -51,7 +52,27 @@ class accountController {
         try {
             const account_id = req.account_id
             const { account } = await accountModel.findOneAccount({ _id: account_id })
-            return success(res, "ดึงข้อมูลผู้ใช้สำเร็จ", { account })
+            const balance = (await transactionModel.getLastestTransaction(req.account_id)).current_amount
+            return success(res, "ดึงข้อมูลผู้ใช้สำเร็จ", { balance, account, })
+        } catch (error) {
+            debug(error)
+            return failed(res, 'found some issue on action')
+        }
+    }
+
+    async getCheckAccount(req, res) {
+        try {
+            const { ref_account } = req.body
+            let account
+            if (ref_account.length == 24) {
+                account = (await accountModel.findOneAccount({ _id: ref_account })).account
+            } else {
+                account = (await accountModel.findOneAccount({ username: ref_account })).account
+            }
+            if (!account) {
+                return failed(res, 'username หรือ เลขบัญชีผู้รับไม่ถูกต้อง')
+            }
+            return success(res, "ดึงข้อมูลผู้ใช้สำเร็จ", { account: account ? account : account_username })
         } catch (error) {
             debug(error)
             return failed(res, 'found some issue on action')
