@@ -12,9 +12,6 @@ class accountModel {
                     populate: { path: "account_id" },
                     options: { sort: { created_date: -1 } }
                 })
-                .select({
-                    password: 0
-                })
             return { completed: true, account }
         } catch (error) {
             console.log(error)
